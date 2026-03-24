@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>Flappy Friend</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #70c5ce; /* Light sky blue */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+        }
+        canvas {
+            background-color: #70c5ce;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            /* Keeps the game looking sharp on any screen size */
+            max-width: 100%;
+            max-height: 100vh;
+            object-fit: contain; 
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="gameCanvas" width="320" height="480"></canvas>
+    
+    <script src="game.js"></script>
+</body>
+</html>
