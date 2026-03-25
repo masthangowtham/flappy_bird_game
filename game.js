@@ -42,6 +42,13 @@ const wingSound = new Audio();
 const pointSound = new Audio();
 const hitSound = new Audio();
 const dieSound = new Audio();
+const bgmSound = new Audio();
+bgmSound.loop = true;
+bgmSound.volume = 0.6;
+wingSound.volume = 1;
+pointSound.voulme = 1;
+hitSound.volume = 1;
+dieSound.volume = 1;
 
 // --- INITIALIZE MENU ---
 function setupMenu() {
@@ -61,6 +68,7 @@ function selectFriend(friendId) {
     pointSound.src = `assets/sounds/${friendId}/point.wav`;
     hitSound.src = `assets/sounds/${friendId}/hit.wav`;
     dieSound.src = `assets/sounds/${friendId}/die.wav`;
+    bgmSound.src = `assets/sounds/${friendId}/bgm.mp3`;
 
     menuOverlay.style.display = "none";
     canvas.style.display = "block";
@@ -204,6 +212,8 @@ const pipes = {
 // --- CORE FUNCTIONS ---
 function triggerGameOver() {
     if (gameState === 1) {
+        bgmSound.pause();
+        bgmSound.currentTime = 0;
         hitSound.play().catch(() => {});
         setTimeout(() => dieSound.play().catch(() => {}), 300);
     }
@@ -253,7 +263,10 @@ function handleInput(e) {
     
     switch(gameState) {
         case 0: // Get Ready
-            gameState = 1; bird.flap(); break;
+            gameState = 1;
+            bird.flap();
+            bgmSound.play().catch(() => console.log("Audio blocked"));
+            break;
         case 1: // Playing
             bird.flap(); break;
         case 2: // Game Over
