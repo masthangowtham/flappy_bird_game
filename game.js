@@ -1,41 +1,90 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
+const menuOverlay = document.getElementById("menuOverlay");
+const friendGrid = document.getElementById("friendGrid");
+
+// --- RESPONSIVE CANVAS LOGIC ---
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas(); // Set initial size
 
 // --- GAME VARIABLES ---
-let frames = 0;
-let score = 0;
+let frames = 0; 
+let score = 0; 
 let bestScore = 0;
-// State: 0 = Get Ready, 1 = Playing, 2 = Game Over
-let gameState = 0; 
+// State: -1 = Menu, 0 = Get Ready, 1 = Playing, 2 = Game Over
+let gameState = -1; 
 
-// --- ASSETS: IMAGES ---
+// --- FRIEND CONFIGURATION ---
+// Update these names as you add photos to the F1-F10 folders
+const friends = [
+    { id: "F1", name: "Harish" },
+    { id: "F2", name: "Friend 2" },
+    { id: "F3", name: "Friend 3" },
+    { id: "F4", name: "Friend 4" },
+    { id: "F5", name: "Friend 5" },
+    { id: "F6", name: "Friend 6" },
+    { id: "F7", name: "Friend 7" },
+    { id: "F8", name: "Friend 8" },
+    { id: "F9", name: "Friend 9" },
+    { id: "F10", name: "Friend 10" }
+];
+
+// --- ASSETS ---
 const birdImg = new Image();
-birdImg.src = "assets/images/bird.png";
+const pipeTopImg = new Image(); pipeTopImg.src = "assets/images/pipe-top.png";
+const pipeBottomImg = new Image(); pipeBottomImg.src = "assets/images/pipe-bottom.png";
 
-const pipeTopImg = new Image();
-pipeTopImg.src = "assets/images/pipe-top.png";
+const wingSound = new Audio();
+const pointSound = new Audio();
+const hitSound = new Audio();
+const dieSound = new Audio();
 
-const pipeBottomImg = new Image();
-pipeBottomImg.src = "assets/images/pipe-bottom.png";
+// --- INITIALIZE MENU ---
+function setupMenu() {
+    friends.forEach(friend => {
+        const btn = document.createElement("button");
+        btn.className = "friend-btn";
+        btn.innerText = friend.name;
+        btn.onclick = () => selectFriend(friend.id);
+        friendGrid.appendChild(btn);
+    });
+}
 
-// --- ASSETS: SOUNDS ---
-const wingSound = new Audio("assets/sounds/wing.wav");
-const pointSound = new Audio("assets/sounds/point.wav");
-const hitSound = new Audio("assets/sounds/hit.wav");
-const dieSound = new Audio("assets/sounds/die.wav");
+// --- DYNAMIC LOADING ---
+function selectFriend(friendId) {
+    birdImg.src = `assets/images/${friendId}/bird.png`;
+    wingSound.src = `assets/sounds/${friendId}/wing.wav`;
+    pointSound.src = `assets/sounds/${friendId}/point.wav`;
+    hitSound.src = `assets/sounds/${friendId}/hit.wav`;
+    dieSound.src = `assets/sounds/${friendId}/die.wav`;
+
+    menuOverlay.style.display = "none";
+    canvas.style.display = "block";
+    
+    // Recalculate bird starting position based on screen
+    bird.reset();
+    pipes.reset();
+    score = 0;
+    gameState = 0; 
+    
+    if (frames === 0) loop(); 
+}
 
 // --- GAME OBJECTS ---
 const bird = {
-    x: 50,
-    y: 150,
-    width: 34,
-    height: 24,
-    velocity: 0,
-    gravity: 0.25,
-    jump: -4.6,
+    x: 50, 
+    y: 150, 
+    width: 40,   // Perfect size for a transparent floating head
+    height: 40, 
+    velocity: 0, 
+    gravity: 0.3, // Tuned for taller screens
+    jump: -6.5,   // Tuned for taller screens
     
     draw: function() {
-        // Fallback to a yellow square if the image doesn't load
         if (birdImg.complete && birdImg.naturalHeight !== 0) {
             ctx.drawImage(birdImg, this.x, this.y, this.width, this.height);
         } else {
@@ -55,51 +104,48 @@ const bird = {
                 triggerGameOver();
             }
             // Ceiling collision
-            if (this.y <= 0) {
-                this.y = 0;
-                this.velocity = 0;
+            if (this.y <= 0) { 
+                this.y = 0; 
+                this.velocity = 0; 
             }
         }
     },
     
     flap: function() {
         this.velocity = this.jump;
-        wingSound.play();
+        wingSound.play().catch(() => {}); // Catch autoplay restrictions cleanly
     },
     
-    reset: function() {
-        this.y = 150;
-        this.velocity = 0;
+    reset: function() { 
+        this.y = canvas.height / 2.5; // Start near the vertical middle
+        this.velocity = 0; 
     }
 };
 
 const pipes = {
-    position: [],
-    width: 53,
-    height: 400,
-    gap: 120, // Space between top and bottom pipe
-    dx: 2,    // Speed of pipes moving left
+    position: [], 
+    width: 60, 
+    height: 800, // Make them extremely tall so they never cut off on big screens
+    dx: 3,       // Speed
     
     draw: function() {
         for (let i = 0; i < this.position.length; i++) {
             let p = this.position[i];
             let topYPos = p.y;
-            let bottomYPos = p.y + this.height + this.gap;
+            let bottomYPos = p.y + this.height + p.gap;
             
-            // Draw Top Pipe
             if (pipeTopImg.complete && pipeTopImg.naturalHeight !== 0) {
                 ctx.drawImage(pipeTopImg, p.x, topYPos, this.width, this.height);
-            } else {
-                ctx.fillStyle = "green";
-                ctx.fillRect(p.x, topYPos, this.width, this.height);
+            } else { 
+                ctx.fillStyle = "green"; 
+                ctx.fillRect(p.x, topYPos, this.width, this.height); 
             }
             
-            // Draw Bottom Pipe
             if (pipeBottomImg.complete && pipeBottomImg.naturalHeight !== 0) {
                 ctx.drawImage(pipeBottomImg, p.x, bottomYPos, this.width, this.height);
-            } else {
-                ctx.fillStyle = "green";
-                ctx.fillRect(p.x, bottomYPos, this.width, this.height);
+            } else { 
+                ctx.fillStyle = "green"; 
+                ctx.fillRect(p.x, bottomYPos, this.width, this.height); 
             }
         }
     },
@@ -107,12 +153,18 @@ const pipes = {
     update: function() {
         if (gameState !== 1) return;
         
-        // Add new pipes every 100 frames
-        if (frames % 100 === 0) {
+        // Spawn interval based on screen width
+        let spawnRate = canvas.width > 600 ? 120 : 90; 
+        
+        if (frames % spawnRate === 0) {
+            // Dynamic gap: 25% of screen height + 50px buffer
+            let dynamicGap = (canvas.height * 0.25) + 50;
+            
             this.position.push({
                 x: canvas.width,
-                y: Math.random() * (canvas.height/2) - (this.height - 50),
-                passed: false // <--- NEW: Flag to track if score was counted
+                y: Math.random() * (canvas.height / 2) - (this.height - 50),
+                gap: dynamicGap,
+                passed: false
             });
         }
         
@@ -120,10 +172,10 @@ const pipes = {
             let p = this.position[i];
             p.x -= this.dx;
             
-            // Collision Detection (AABB)
-            let bottomPipeYPos = p.y + this.height + this.gap;
-            let tolerance = 4; 
+            let bottomPipeYPos = p.y + this.height + p.gap;
+            let tolerance = Math.floor(bird.width * 0.15); 
             
+            // Collision Detection
             if (bird.x + bird.width - tolerance > p.x && 
                 bird.x + tolerance < p.x + this.width && 
                 (bird.y + tolerance < p.y + this.height || 
@@ -131,112 +183,114 @@ const pipes = {
                 triggerGameOver();
             }
             
-            // NEW SCORE LOGIC: Check if bird passed the pipe and it hasn't been counted yet
+            // Score tracking
             if (p.x + this.width < bird.x && !p.passed) {
                 score++;
-                pointSound.play();
+                pointSound.play().catch(() => {});
                 bestScore = Math.max(score, bestScore);
-                p.passed = true; // Mark as passed so it only counts once
+                p.passed = true;
             }
             
-            // Remove pipes that go off screen
+            // Remove off-screen pipes
             if (p.x + this.width <= 0) {
-                this.position.shift();
-                i--; // Adjust index after removing an element
+                this.position.shift(); 
+                i--;
             }
         }
     },
-    
-    reset: function() {
-        this.position = [];
-    }
+    reset: function() { this.position = []; }
 };
 
 // --- CORE FUNCTIONS ---
 function triggerGameOver() {
     if (gameState === 1) {
-        hitSound.play();
-        setTimeout(() => dieSound.play(), 300); // Play die sound slightly after hit
+        hitSound.play().catch(() => {});
+        setTimeout(() => dieSound.play().catch(() => {}), 300);
     }
     gameState = 2;
 }
 
 function drawUI() {
-    ctx.fillStyle = "white";
-    ctx.strokeStyle = "black";
+    ctx.fillStyle = "white"; 
+    ctx.strokeStyle = "black"; 
     ctx.lineWidth = 2;
+    ctx.textAlign = "center";
+    
+    let centerX = canvas.width / 2;
     
     if (gameState === 0) {
         ctx.font = "30px Arial";
-        ctx.fillText("Tap to Start", 80, 200);
-        ctx.strokeText("Tap to Start", 80, 200);
+        ctx.fillText("Tap to Start", centerX, canvas.height / 2 + 50); 
+        ctx.strokeText("Tap to Start", centerX, canvas.height / 2 + 50);
     } 
     
     if (gameState === 1 || gameState === 2) {
-        ctx.font = "40px Arial";
-        ctx.fillText(score, canvas.width/2 - 10, 50);
-        ctx.strokeText(score, canvas.width/2 - 10, 50);
+        ctx.font = "50px Arial";
+        ctx.fillText(score, centerX, 80); 
+        ctx.strokeText(score, centerX, 80);
     }
     
     if (gameState === 2) {
-        ctx.font = "30px Arial";
-        ctx.fillText("Game Over", 85, 200);
-        ctx.strokeText("Game Over", 85, 200);
+        ctx.font = "40px Arial";
+        ctx.fillText("Game Over", centerX, canvas.height / 2 - 40); 
+        ctx.strokeText("Game Over", centerX, canvas.height / 2 - 40);
+        
+        ctx.font = "25px Arial";
+        ctx.fillText("Best: " + bestScore, centerX, canvas.height / 2 + 10); 
+        ctx.strokeText("Best: " + bestScore, centerX, canvas.height / 2 + 10);
         
         ctx.font = "20px Arial";
-        ctx.fillText("Best: " + bestScore, 120, 240);
-        ctx.strokeText("Best: " + bestScore, 120, 240);
+        ctx.fillText("Tap top half to Restart", centerX, canvas.height / 2 + 60);
         
-        ctx.font = "15px Arial";
-        ctx.fillText("Tap to Restart", 110, 280);
+        ctx.fillStyle = "yellow";
+        ctx.fillText("Tap bottom half for Menu", centerX, canvas.height / 2 + 100);
     }
 }
 
 // --- INPUT HANDLING ---
 function handleInput(e) {
-    if (e.type !== 'keydown') e.preventDefault(); // Prevent double firing on touch/click
+    if (e.type !== 'keydown') e.preventDefault();
     
     switch(gameState) {
         case 0: // Get Ready
-            gameState = 1;
-            bird.flap();
-            break;
+            gameState = 1; bird.flap(); break;
         case 1: // Playing
-            bird.flap();
-            break;
+            bird.flap(); break;
         case 2: // Game Over
-            bird.reset();
-            pipes.reset();
-            score = 0;
-            gameState = 0;
-            break;
+            if (e.type === 'mousedown' || e.type === 'touchstart') {
+                let rect = canvas.getBoundingClientRect();
+                let clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+                let y = clientY - rect.top;
+                
+                // If they tap the bottom half of the screen, go to Menu
+                if (y > canvas.height / 2 + 50) { 
+                    gameState = -1;
+                    canvas.style.display = "none";
+                    menuOverlay.style.display = "flex";
+                    return;
+                }
+            }
+            // Standard restart
+            bird.reset(); pipes.reset(); score = 0; gameState = 0; break;
     }
 }
 
-// Listen for Clicks, Touches, and Spacebar
 canvas.addEventListener("mousedown", handleInput);
 canvas.addEventListener("touchstart", handleInput, {passive: false});
 document.addEventListener("keydown", function(e) {
     if(e.code === "Space" || e.code === "ArrowUp") handleInput(e);
 });
 
-// --- GAME LOOP ---
+// --- MAIN LOOP ---
 function loop() {
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Update logic
-    bird.update();
-    pipes.update();
-    
-    // Draw elements
-    pipes.draw();
-    bird.draw();
-    drawUI();
-    
+    if (gameState !== -1) { 
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        bird.update(); pipes.update();
+        pipes.draw(); bird.draw(); drawUI();
+    }
     frames++;
     requestAnimationFrame(loop);
 }
 
-// Start the loop
-loop();
+// Start the app
+setupMenu();
