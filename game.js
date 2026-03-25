@@ -46,7 +46,7 @@ const bgmSound = new Audio();
 bgmSound.loop = true;
 bgmSound.volume = 0.6;
 wingSound.volume = 1;
-pointSound.voulme = 1;
+pointSound.volume = 1;
 hitSound.volume = 1;
 dieSound.volume = 1;
 
