@@ -22,7 +22,7 @@ let gameState = -1;
 // Update these names as you add photos to the F1-F10 folders
 const friends = [
     { id: "F1", name: "Harish" },
-    { id: "F2", name: "Friend 2" },
+    { id: "F2", name: "Dheeraj" },
     { id: "F3", name: "Friend 3" },
     { id: "F4", name: "Friend 4" },
     { id: "F5", name: "Friend 5" },
