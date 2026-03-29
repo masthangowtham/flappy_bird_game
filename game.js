@@ -44,11 +44,11 @@ const hitSound = new Audio();
 const dieSound = new Audio();
 const bgmSound = new Audio();
 bgmSound.loop = true;
-bgmSound.volume = 0.6;
-wingSound.volume = 1;
-pointSound.volume = 1;
-hitSound.volume = 1;
-dieSound.volume = 1;
+bgmSound.volume = 1;
+wingSound.volume = 0.5;
+pointSound.volume = 0.5;
+hitSound.volume = 0.5;
+dieSound.volume = 0.8;
 
 // --- INITIALIZE MENU ---
 function setupMenu() {
